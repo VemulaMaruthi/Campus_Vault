@@ -22,7 +22,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
-    // ✅ Register — password auto set as rollNumber
+    // ✅ Register
     public AuthResponse register(RegisterRequest request) {
         if (studentRepository.existsByRollNumber(request.getRollNumber())) {
             throw new RuntimeException("Roll number already registered: " + request.getRollNumber());
@@ -34,29 +34,30 @@ public class AuthService {
         student.setRollNumber(request.getRollNumber());
         student.setYear(request.getYear());
         student.setBranch(request.getBranch());
-        student.setPassword(passwordEncoder.encode(request.getRollNumber())); // 🔑 password = rollNumber
+        student.setPassword(passwordEncoder.encode(request.getRollNumber()));
         student.setRole(Role.STUDENT);
 
-        studentRepository.save(student);
+        StudentProfile saved = studentRepository.save(student);
 
         return new AuthResponse(
+                saved.getId(),          // ✅ MongoDB _id
                 null,
                 "Student registered successfully",
-                student.getRollNumber(),
-                student.getName(),
-                student.getDegree(),
-                student.getBranch(),
-                student.getYear(),
-                student.getRole().name()
+                saved.getRollNumber(),
+                saved.getName(),
+                saved.getDegree(),
+                saved.getBranch(),
+                saved.getYear(),
+                saved.getRole().name()
         );
     }
 
-    // ✅ Login — student enters rollNumber only
+    // ✅ Login
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getRollNumber(),
-                        request.getRollNumber()  // password = rollNumber
+                        request.getRollNumber()
                 )
         );
 
@@ -69,6 +70,7 @@ public class AuthService {
         );
 
         return new AuthResponse(
+                student.getId(),        // ✅ MongoDB _id
                 token,
                 "Login successful",
                 student.getRollNumber(),

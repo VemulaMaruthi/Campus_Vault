@@ -4,6 +4,7 @@ import com.example.PdfBackend.CustomException.ForbiddenException;
 import com.example.PdfBackend.CustomException.NotFoundException;
 import com.example.PdfBackend.DTO.ClubRequest;
 import com.example.PdfBackend.DTO.ClubResponse;
+import com.example.PdfBackend.DTO.MemberInfo;
 import com.example.PdfBackend.model.Club;
 import com.example.PdfBackend.model.StudentProfile;
 import com.example.PdfBackend.repository.ClubRepository;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,8 +25,6 @@ public class ClubService {
     private final StudentProfileRepository studentRepository;
 
     public ClubResponse createClub(ClubRequest request, String rollNumber) {
-
-        // ✅ Use NotFoundException
         StudentProfile student = studentRepository.findByRollNumber(rollNumber)
                 .orElseThrow(() -> new NotFoundException("Student not found: " + rollNumber));
 
@@ -58,11 +58,9 @@ public class ClubService {
     }
 
     public void deleteClub(String clubId, String rollNumber) {
-        // ✅ Use NotFoundException
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new NotFoundException("Club not found: " + clubId));
 
-        // ✅ Use ForbiddenException
         if (!club.getCreatedBy().equals(rollNumber)) {
             throw new ForbiddenException("You can only delete your own club");
         }
@@ -70,11 +68,67 @@ public class ClubService {
         clubRepository.deleteById(clubId);
     }
 
+    public ClubResponse joinClub(String clubId, String rollNumber) {
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new NotFoundException("Club not found: " + clubId));
+
+        if (club.getCreatedBy().equals(rollNumber)) {
+            throw new ForbiddenException("You cannot join your own club");
+        }
+        if (club.hasMember(rollNumber)) {
+            throw new ForbiddenException("You have already joined this club");
+        }
+        if (club.isFull()) {
+            throw new ForbiddenException("This club is full (max 6 members)");
+        }
+
+        long joinedCount = clubRepository.countByMembersContaining(rollNumber);
+        if (joinedCount >= 6) {
+            throw new ForbiddenException("You can only join up to 6 clubs");
+        }
+
+        club.getMembers().add(rollNumber);
+        return mapToResponse(clubRepository.save(club));
+    }
+
+    public ClubResponse leaveClub(String clubId, String rollNumber) {
+        Club club = clubRepository.findById(clubId)
+                .orElseThrow(() -> new NotFoundException("Club not found: " + clubId));
+
+        if (!club.hasMember(rollNumber)) {
+            throw new ForbiddenException("You are not a member of this club");
+        }
+
+        club.getMembers().remove(rollNumber);
+        return mapToResponse(clubRepository.save(club));
+    }
+
     public long getClubCount() {
         return clubRepository.count();
     }
 
     private ClubResponse mapToResponse(Club club) {
+        List<MemberInfo> memberDetails = club.getMembers().stream()
+                .map(rollNumber -> {
+                    // Get student profile for name, year, branch
+                    StudentProfile student = studentRepository.findByRollNumber(rollNumber)
+                            .orElse(null);
+
+                    String name   = student != null ? student.getName()   : "Unknown";
+                    String year   = student != null ? student.getYear()   : "-";
+                    String branch = student != null ? student.getBranch() : "-";
+
+                    // ✅ LinkedIn: only if this member has created their own club
+                    String linkedinUrl = clubRepository.findByCreatedBy(rollNumber)
+                            .stream()
+                            .findFirst()
+                            .map(Club::getLinkedinUrl)
+                            .orElse(null); // null = no club created = no LinkedIn shown
+
+                    return new MemberInfo(rollNumber, name, year, branch, linkedinUrl);
+                })
+                .collect(Collectors.toList());
+
         return new ClubResponse(
                 club.getId(),
                 club.getTitle(),
@@ -82,7 +136,11 @@ public class ClubService {
                 club.getLinkedinUrl(),
                 club.getCreatedBy(),
                 club.getCreatedByName(),
-                club.getCreatedAt()
+                club.getCreatedAt(),
+                club.getMembers(),
+                memberDetails,
+                club.getMembers().size(),
+                club.isFull()
         );
     }
 }

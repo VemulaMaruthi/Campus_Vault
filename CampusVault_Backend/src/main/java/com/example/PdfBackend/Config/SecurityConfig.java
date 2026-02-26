@@ -51,7 +51,9 @@ public class SecurityConfig {
 
                         // ✅ Student routes — needs JWT
                         .requestMatchers("/student/**").hasAnyRole("STUDENT", "ADMIN")
-
+                        .requestMatchers("/api/clubs/all").permitAll()
+                        .requestMatchers("/api/clubs/*/join").authenticated()
+                        .requestMatchers("/api/clubs/*/leave").authenticated()
                         // ✅ Everything else needs authentication
                         .anyRequest().authenticated()
                 )

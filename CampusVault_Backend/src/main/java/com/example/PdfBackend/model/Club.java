@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -26,4 +28,17 @@ public class Club {
 
     // Timestamp
     private LocalDateTime createdAt;
+
+    private List<String> members = new ArrayList<>();
+
+    // ✅ Max members allowed (excluding creator)
+    private static final int MAX_MEMBERS = 6;
+
+    public boolean isFull() {
+        return members.size() >= MAX_MEMBERS;
+    }
+
+    public boolean hasMember(String rollNumber) {
+        return members.contains(rollNumber);
+    }
 }

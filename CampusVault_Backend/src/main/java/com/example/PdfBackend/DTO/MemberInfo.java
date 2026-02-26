@@ -5,14 +5,10 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class AuthResponse {
-    private String id;
-    private String token;
-    private String message;
+public class MemberInfo {
     private String rollNumber;
     private String name;
-    private String degree;
-    private String branch;
     private String year;
-    private String role;
+    private String branch;
+    private String linkedinUrl;
 }

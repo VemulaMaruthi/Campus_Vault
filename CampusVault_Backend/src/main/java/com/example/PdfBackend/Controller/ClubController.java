@@ -4,14 +4,12 @@ import com.example.PdfBackend.DTO.ClubRequest;
 import com.example.PdfBackend.DTO.ClubResponse;
 import com.example.PdfBackend.Service.ClubService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/clubs")
@@ -20,7 +18,6 @@ public class ClubController {
 
     private final ClubService clubService;
 
-    // ✅ No try/catch needed — GlobalExceptionHandler handles it
     @PostMapping("/create")
     public ResponseEntity<ClubResponse> createClub(
             @RequestBody ClubRequest request,
@@ -49,6 +46,26 @@ public class ClubController {
             @AuthenticationPrincipal UserDetails userDetails) {
         clubService.deleteClub(clubId, userDetails.getUsername());
         return ResponseEntity.ok("Club deleted successfully");
+    }
+
+    // ✅ Join a club
+    @PostMapping("/{clubId}/join")
+    public ResponseEntity<ClubResponse> joinClub(
+            @PathVariable String clubId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                clubService.joinClub(clubId, userDetails.getUsername())
+        );
+    }
+
+    // ✅ Leave a club
+    @PostMapping("/{clubId}/leave")
+    public ResponseEntity<ClubResponse> leaveClub(
+            @PathVariable String clubId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                clubService.leaveClub(clubId, userDetails.getUsername())
+        );
     }
 
     @GetMapping("/count")

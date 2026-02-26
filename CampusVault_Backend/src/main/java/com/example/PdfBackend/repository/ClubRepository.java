@@ -15,4 +15,5 @@ public interface ClubRepository extends MongoRepository<Club, String> {
 
     // Count total clubs
     long countBy();
+    long countByMembersContaining(String rollNumber);
 }
