@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +32,7 @@ public class ClubService {
         }
 
         Club club = new Club();
+        club.setId(rollNumber);  // ✅ club id = student's rollNumber
         club.setTitle(request.getTitle().trim());
         club.setDescription(request.getDescription().trim());
         club.setLinkedinUrl(request.getLinkedinUrl().trim());
@@ -110,7 +110,6 @@ public class ClubService {
     private ClubResponse mapToResponse(Club club) {
         List<MemberInfo> memberDetails = club.getMembers().stream()
                 .map(rollNumber -> {
-                    // Get student profile for name, year, branch
                     StudentProfile student = studentRepository.findByRollNumber(rollNumber)
                             .orElse(null);
 
@@ -118,19 +117,18 @@ public class ClubService {
                     String year   = student != null ? student.getYear()   : "-";
                     String branch = student != null ? student.getBranch() : "-";
 
-                    // ✅ LinkedIn: only if this member has created their own club
                     String linkedinUrl = clubRepository.findByCreatedBy(rollNumber)
                             .stream()
                             .findFirst()
                             .map(Club::getLinkedinUrl)
-                            .orElse(null); // null = no club created = no LinkedIn shown
+                            .orElse(null);
 
                     return new MemberInfo(rollNumber, name, year, branch, linkedinUrl);
                 })
                 .collect(Collectors.toList());
 
         return new ClubResponse(
-                club.getId(),
+                club.getId(),  // ✅ fixed: was club.setId()
                 club.getTitle(),
                 club.getDescription(),
                 club.getLinkedinUrl(),

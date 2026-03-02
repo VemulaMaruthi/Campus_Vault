@@ -133,7 +133,7 @@ function AddClub() {
                 LinkedIn →
               </a>
               <p className="text-xs text-gray-500">
-                Created by {club.createdByName} ({club.createdBy})
+                Created by {club.createdByName} ({club.clubId})
               </p>
 
               {/* Members section */}

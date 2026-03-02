@@ -8,6 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,11 +25,10 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configure(http))
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sess -> sess
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-
                         // ✅ Auth — public
                         .requestMatchers("/api/auth/**").permitAll()
 
@@ -41,9 +41,14 @@ public class SecurityConfig {
                         // ✅ Student count — public
                         .requestMatchers("/student/count").permitAll()
 
-                        // ✅ Clubs — view all & count public, create/delete needs login
+                        // ✅ Ideas — fully public (community board)
+                        .requestMatchers("/api/ideas/**").permitAll()
+//                        .requestMatchers("/api/comments/**").permitAll()
+                        // ✅ Clubs — view all & count public
                         .requestMatchers(HttpMethod.GET, "/api/clubs/all").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/clubs/count").permitAll()
+
+                        // ✅ Use hasAnyRole so it expects ROLE_STUDENT, ROLE_ADMIN
                         .requestMatchers("/api/clubs/**").hasAnyRole("STUDENT", "ADMIN")
 
                         // ✅ Admin only
@@ -51,9 +56,7 @@ public class SecurityConfig {
 
                         // ✅ Student routes — needs JWT
                         .requestMatchers("/student/**").hasAnyRole("STUDENT", "ADMIN")
-                        .requestMatchers("/api/clubs/all").permitAll()
-                        .requestMatchers("/api/clubs/*/join").authenticated()
-                        .requestMatchers("/api/clubs/*/leave").authenticated()
+
                         // ✅ Everything else needs authentication
                         .anyRequest().authenticated()
                 )
