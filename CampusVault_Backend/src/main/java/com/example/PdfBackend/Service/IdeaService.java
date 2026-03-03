@@ -38,7 +38,7 @@ public class IdeaService {
         }
 
         Idea idea = new Idea();
-        idea.setId(rollNumber);
+        idea.getId();
         idea.setCategory(request.getCategory());
         idea.setTitle(request.getTitle());
         idea.setDescription(request.getDescription());

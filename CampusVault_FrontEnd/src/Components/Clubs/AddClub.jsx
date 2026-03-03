@@ -133,15 +133,15 @@ function AddClub() {
                 LinkedIn →
               </a>
               <p className="text-xs text-gray-500">
-                Created by {club.createdByName} ({club.clubId})
+                Created by {club.createdByName} ({club.createdBy})
               </p>
 
               {/* Members section */}
               <div className="mt-2">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-4">
                   <h2 className="text-sm font-semibold text-white">Members</h2>
                   <span className="text-xs text-gray-500">
-                    {club.memberCount ?? club.members?.length ?? 0} / 6 joined
+                    {club.memberCount ?? club.members?.length ?? 0} / 20 joined
                   </span>
                 </div>
 
@@ -153,7 +153,7 @@ function AddClub() {
                     {club.memberDetails.map((member, index) => (
                       <div
                         key={member.rollNumber}
-                        className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg px-3 py-2 shrink-0"
+                        className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg px-4 py-3 shrink-0"
                       >
                         {/* Index circle */}
                         <div className="w-7 h-7 rounded-full bg-[#26F2D0]/20 text-[#26F2D0]

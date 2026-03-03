@@ -136,7 +136,7 @@ export default function IdeaCard({ idea, student, ideas, setIdeas }) {
         </div>
 
         <div className="absolute top-6 right-20 text-sm bg-[#1f2937] text-[#26F2D0] px-4 py-2 rounded-full">
-          {idea.createdByBranch} · {idea.createdByYear}
+          {idea.createdByBranch} · {idea.createdByYear}<p>year</p>
         </div>
 
         <h2 className="font-bold text-2xl mt-16 mb-6 text-center">
