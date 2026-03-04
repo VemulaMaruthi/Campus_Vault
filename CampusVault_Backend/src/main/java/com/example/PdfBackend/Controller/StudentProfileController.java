@@ -52,6 +52,11 @@ public class StudentProfileController {
         return ResponseEntity.ok(exists);
     }
 
+    @GetMapping("/student/exists/email/{email}")
+    public ResponseEntity<Boolean> emailExists (@PathVariable String email) {
+        boolean exists = studentProfileService.emailExists(email);
+        return ResponseEntity.ok(exists);
+    }
     // 🔒 Protected — get total student count
     @GetMapping("/student/count")
     public ResponseEntity<Long> getCount() {

@@ -3,6 +3,7 @@ import CommentItem from "./CommentItem";
 
 export default function Comment({ idea, student, ideas, setIdeas }) {
   const [text, setText] = useState("");
+  const [error, setError] = useState("");
 
   const ideaId = idea.id;
   const token = localStorage.getItem("token");
@@ -14,6 +15,8 @@ export default function Comment({ idea, student, ideas, setIdeas }) {
   const submit = async () => {
     if (!text.trim() || alreadyCommented) return;
 
+    setError(""); // clear any previous error
+
     const res = await fetch(`http://localhost:8081/api/ideas/${ideaId}/comment`, {
       method: "POST",
       headers: {
@@ -24,11 +27,14 @@ export default function Comment({ idea, student, ideas, setIdeas }) {
     });
 
     if (res.status === 403) {
-      alert("You have already commented on this idea.");
+      setError("You have already commented on this idea.");
       return;
     }
 
-    if (!res.ok) return;
+    if (!res.ok) {
+      setError("Something went wrong. Please try again.");
+      return;
+    }
 
     const updated = await res.json();
     setIdeas(prev => prev.map(i =>
@@ -49,11 +55,24 @@ export default function Comment({ idea, student, ideas, setIdeas }) {
         <>
           <textarea
             value={text}
-            onChange={e => setText(e.target.value)}
-            className="w-full p-2 bg-[#222] rounded resize-none"
+            onChange={e => {
+              setText(e.target.value);
+              if (error) setError(""); // clear error when user starts typing
+            }}
+            className={`w-full p-2 bg-[#222] rounded resize-none border ${
+              error ? "border-red-500/60" : "border-transparent"
+            } focus:outline-none transition-colors`}
             placeholder="Write your response..."
             rows={3}
           />
+
+          {/* ✅ Inline error message below textarea */}
+          {error && (
+            <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+              ⚠️ {error}
+            </p>
+          )}
+
           <button
             onClick={submit}
             disabled={!text.trim()}
@@ -77,7 +96,7 @@ export default function Comment({ idea, student, ideas, setIdeas }) {
         ) : (
           (idea.comments || []).map((c, index) => (
             <CommentItem
-              key={c.id || index} // ✅ fixed key prop
+              key={c.id || index}
               comment={c}
               student={student}
               onDelete={async () => {

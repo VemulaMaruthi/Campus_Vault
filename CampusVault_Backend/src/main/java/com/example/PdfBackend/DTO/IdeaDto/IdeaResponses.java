@@ -21,8 +21,12 @@ public class IdeaResponses {
     private String createdByName;
     private String createdByBranch;
     private String createdByYear;
+
+    // ✅ Added
+    private String createdById;
+    private String createdByEmail;
+
     private int likes;
     private List<String> likedBy;
     private List<Comment> comments;
-
 }

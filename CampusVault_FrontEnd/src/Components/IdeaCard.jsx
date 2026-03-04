@@ -7,7 +7,6 @@ export default function IdeaCard({ idea, student, ideas, setIdeas }) {
   const ideaId = idea.id;
   const token = localStorage.getItem("token");
 
-  // ✅ Check if this student already liked — from backend data
   const alreadyLiked = (idea.likedBy || []).includes(student?.rollNumber);
   const [hasLiked, setHasLiked] = useState(alreadyLiked);
 
@@ -26,16 +25,13 @@ export default function IdeaCard({ idea, student, ideas, setIdeas }) {
     Cultural: "bg-yellow-300/20 text-yellow-400",
   };
 
-  // ✅ Single like handler used by both compact card and modal
   const handleLike = async (e) => {
     e.stopPropagation();
     if (hasLiked) return;
 
     const res = await fetch(`http://localhost:8081/api/ideas/${ideaId}/like`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`, // ✅ Backend identifies student from token
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!res.ok) return;
@@ -43,6 +39,24 @@ export default function IdeaCard({ idea, student, ideas, setIdeas }) {
     const updated = await res.json();
     setHasLiked(true);
     setIdeas(prev => prev.map(i => (i.id === updated.id ? updated : i)));
+  };
+
+  // ✅ Uses idea.createdByEmail from backend — no localStorage guessing
+  const handleEmail = (e) => {
+    e.stopPropagation();
+
+    const recipientEmail = idea.createdByEmail || null;
+
+    const subject = encodeURIComponent(`Regarding your idea: ${idea.title}`);
+    const body = encodeURIComponent(
+      `Hi ${idea.createdByName},\n\nI came across your idea "${idea.title}" and wanted to connect.\n\nBest regards`
+    );
+
+    const gmailUrl = recipientEmail
+      ? `https://mail.google.com/mail/?view=cm&fs=1&to=${recipientEmail}&su=${subject}&body=${body}`
+      : `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`;
+
+    window.open(gmailUrl, "_blank");
   };
 
   const renderCompactCard = () => (
@@ -58,8 +72,17 @@ export default function IdeaCard({ idea, student, ideas, setIdeas }) {
         {idea.category}
       </div>
 
-      <div className="absolute top-4 right-4 text-xs bg-[#1f2937] text-[#26F2D0] px-3 py-1 rounded-full">
-        {idea.createdByBranch} · {idea.createdByYear}
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        <div className="text-xs bg-[#1f2937] text-[#26F2D0] px-3 py-1 rounded-full">
+          {idea.createdByBranch} · {idea.createdByYear} Year
+        </div>
+        <button
+          onClick={handleEmail}
+          className="text-xs bg-[#1f2937] text-[#26F2D0] px-3 py-1 rounded-full
+                     hover:bg-indigo-500/30 hover:text-indigo-300 transition-all"
+        >
+          📧 Email
+        </button>
       </div>
 
       <h3 className="font-bold mt-8 text-left">{idea.title}</h3>
@@ -72,10 +95,7 @@ export default function IdeaCard({ idea, student, ideas, setIdeas }) {
             </p>
             <span
               className="text-[#26F2D0] text-sm font-medium cursor-pointer hover:text-white transition-colors block"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowModal(true);
-              }}
+              onClick={(e) => { e.stopPropagation(); setShowModal(true); }}
             >
               read more →
             </span>
@@ -92,17 +112,12 @@ export default function IdeaCard({ idea, student, ideas, setIdeas }) {
           <span>by {idea.createdByName}</span>
           <span className="text-xs text-gray-500">• {formattedDate}</span>
         </div>
-
         <div className="flex gap-6 items-center">
           <span>💬 {idea.comments?.length || 0}</span>
-
-          {/* ✅ Like button on compact card */}
           <button
             onClick={handleLike}
             disabled={hasLiked}
-            className={`transition-all ${
-              hasLiked ? "opacity-50 cursor-not-allowed" : "hover:scale-125"
-            }`}
+            className={`transition-all ${hasLiked ? "opacity-50 cursor-not-allowed" : "hover:scale-125"}`}
           >
             👍 {idea.likes || 0}
           </button>
@@ -117,7 +132,6 @@ export default function IdeaCard({ idea, student, ideas, setIdeas }) {
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={() => setShowModal(false)}
       />
-
       <div className="relative bg-[#111] w-full max-w-2xl max-h-[90vh] overflow-y-auto
                       rounded-2xl border-2 border-[#26F2D0]/50 shadow-2xl p-8 z-10">
 
@@ -128,24 +142,18 @@ export default function IdeaCard({ idea, student, ideas, setIdeas }) {
           ×
         </button>
 
-        <div
-          className={`absolute top-6 left-6 text-sm font-semibold px-4 py-2 rounded-full
-          ${categoryStyles[idea.category] || "bg-gray-500/20 text-gray-400"}`}
-        >
+        <div className={`absolute top-6 left-6 text-sm font-semibold px-4 py-2 rounded-full
+          ${categoryStyles[idea.category] || "bg-gray-500/20 text-gray-400"}`}>
           {idea.category}
         </div>
 
         <div className="absolute top-6 right-20 text-sm bg-[#1f2937] text-[#26F2D0] px-4 py-2 rounded-full">
-          {idea.createdByBranch} · {idea.createdByYear}<p>year</p>
+          {idea.createdByBranch} · {idea.createdByYear} Year
         </div>
 
-        <h2 className="font-bold text-2xl mt-16 mb-6 text-center">
-          {idea.title}
-        </h2>
+        <h2 className="font-bold text-2xl mt-16 mb-6 text-center">{idea.title}</h2>
 
-        <p className="text-gray-300 text-lg leading-relaxed mb-8">
-          {idea.description}
-        </p>
+        <p className="text-gray-300 text-lg leading-relaxed mb-8">{idea.description}</p>
 
         <div className="border-t border-white/20 my-8"></div>
 
@@ -154,7 +162,6 @@ export default function IdeaCard({ idea, student, ideas, setIdeas }) {
             <span className="font-medium">by {idea.createdByName}</span>
             <p className="text-sm text-gray-500">{formattedDate}</p>
           </div>
-
           <div className="flex gap-8">
             <span>💬 {idea.comments?.length || 0} comments</span>
             <span>👍 {idea.likes || 0} likes</span>
@@ -162,16 +169,10 @@ export default function IdeaCard({ idea, student, ideas, setIdeas }) {
         </div>
 
         <div className="border-t border-white/10 pt-6">
-          <Comment
-            idea={idea}
-            student={student}
-            ideas={ideas}
-            setIdeas={setIdeas}
-          />
+          <Comment idea={idea} student={student} ideas={ideas} setIdeas={setIdeas} />
         </div>
 
-        <div className="mt-6 pt-4 border-t border-white/10">
-          {/* ✅ Like button in modal */}
+        <div className="mt-6 pt-4 border-t border-white/10 flex gap-4">
           <button
             onClick={handleLike}
             disabled={hasLiked}
@@ -182,6 +183,14 @@ export default function IdeaCard({ idea, student, ideas, setIdeas }) {
             }`}
           >
             {hasLiked ? "✅ Liked" : "👍 Like"} ({idea.likes || 0})
+          </button>
+
+          <button
+            onClick={handleEmail}
+            className="px-6 py-2 rounded-full font-medium transition-all
+                       bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400"
+          >
+            📧 Email {idea.createdByName}
           </button>
         </div>
       </div>

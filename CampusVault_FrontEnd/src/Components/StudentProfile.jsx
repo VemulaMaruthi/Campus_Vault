@@ -5,6 +5,7 @@ export default function StudentProfile() {
   const [form, setForm] = useState({
     name: "",
     roll: "",
+    email: "",
     year: "",
     branch: "",
     degree: ""
@@ -22,7 +23,18 @@ export default function StudentProfile() {
     setError("");
     setForm({ ...form, roll: value });
   };
+  const inputEmail = (e) => {
+    const value = e.target.value;
 
+  // simple email validation
+  if (value && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)) {
+    setError("Invalid email format");
+  } else {
+    setError("");
+  }
+
+  setForm({ ...form, email: value });
+  }
   const isValidRoll = (roll) => {
     return roll.length >= 4 && roll[2] === "C" && roll[3] === "7";
   };
@@ -32,7 +44,7 @@ export default function StudentProfile() {
   };
 
   const handleSubmit = async () => {
-    if (!form.name || !form.roll || !form.year || !form.branch) {
+    if (!form.name || !form.roll || !form.year || !form.branch || !form.email) {
       setError("Please fill all fields");
       return;
     }
@@ -52,6 +64,7 @@ export default function StudentProfile() {
         body: JSON.stringify({
           name: form.name,
           rollNumber: form.roll,
+          email: form.email,
           year: form.year,
           branch: form.branch,
           degree: form.degree
@@ -83,6 +96,7 @@ export default function StudentProfile() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
       localStorage.setItem("rollNumber", data.rollNumber);
+      localStorage.setItem("Email",data.email)
       localStorage.setItem("name", data.name);
       localStorage.setItem("id", data.id);
 
@@ -93,7 +107,7 @@ export default function StudentProfile() {
       setError("Backend not reachable. Try again later.");
     }
   };
-
+ 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black
                     bg-[linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.8)),url('/vault-bg.jpeg')]
@@ -144,6 +158,15 @@ export default function StudentProfile() {
             placeholder="Roll Number"
             value={form.roll}
             onChange={inputChange}
+            className="w-full p-3 rounded-lg bg-[#111] border border-white/10
+                       text-white placeholder-gray-500 focus:border-[#26F2D0]
+                       focus:outline-none"
+          />
+          <input
+            name="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={inputEmail}
             className="w-full p-3 rounded-lg bg-[#111] border border-white/10
                        text-white placeholder-gray-500 focus:border-[#26F2D0]
                        focus:outline-none"

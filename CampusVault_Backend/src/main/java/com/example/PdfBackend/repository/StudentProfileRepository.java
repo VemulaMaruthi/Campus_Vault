@@ -9,5 +9,6 @@ public interface StudentProfileRepository extends MongoRepository<StudentProfile
     boolean existsByRollNumber (String rollNumber);
     Optional<StudentProfile> findByRollNumber (String rollNumber);
     long countByRole(com.example.PdfBackend.model.Role role);
+    boolean existsByEmail (String email);
 
 }

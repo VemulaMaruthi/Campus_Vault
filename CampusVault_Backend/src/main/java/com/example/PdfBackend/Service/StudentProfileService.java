@@ -58,6 +58,9 @@ public class StudentProfileService {
         return studentProfileRepository.existsByRollNumber(roll);
     }
 
+    public boolean emailExists (String email) {
+        return studentProfileRepository.existsByEmail(email);
+    }
     public Optional<StudentProfile> findByRollNumber(String rollNumber) {
         return studentProfileRepository.findByRollNumber(rollNumber);
     }

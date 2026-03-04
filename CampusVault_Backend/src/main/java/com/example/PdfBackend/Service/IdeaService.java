@@ -77,6 +77,8 @@ public class IdeaService {
                 idea.getCreatedByName(),
                 idea.getCreatedByBranch(),
                 idea.getCreatedByYear(),
+                idea.getCreatedById(),      // ✅ new
+                idea.getCreatedByEmail(),   // ✅ new
                 idea.getLikes(),
                 idea.getLikedBy(),
                 idea.getComments() != null ? idea.getComments() : new ArrayList<>() // ✅

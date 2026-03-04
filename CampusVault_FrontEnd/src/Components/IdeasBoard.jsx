@@ -5,31 +5,85 @@ import IdeaCard from "./IdeaCard";
 export default function IdeasBoard() {
   const token = localStorage.getItem("token");
   const student = JSON.parse(localStorage.getItem("studentProfile") || "{}");
+  const myId = localStorage.getItem("id");
+
+  // ✅ Key cooldown by student id so each student has their own cooldown
+  const cooldownKey = `lastIdeaPostedAt_${myId}`;
 
   const [showForm, setShowForm] = useState(false);
   const [ideas, setIdeas] = useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
+  const [postError, setPostError] = useState("");
 
   useEffect(() => {
+    if (!token || !myId) {
+      window.location.href = "/";
+      return;
+    }
+
     fetch("http://localhost:8081/api/ideas")
       .then(res => res.json())
       .then(data => setIdeas(data))
       .catch(err => console.error("Failed to fetch ideas:", err));
   }, []);
 
-  const normalize = (str) => (str || "").trim().toLowerCase().replace(/\s+/g, " ");
-  const myName = normalize(student?.name);
+  // ✅ Restore cooldown message on refresh — scoped to this student
+  useEffect(() => {
+    if (!myId) return;
+    const lastPostedAt = localStorage.getItem(cooldownKey);
+    if (!lastPostedAt) return;
+
+    const diff = new Date() - new Date(lastPostedAt);
+    const ms48 = 48 * 60 * 60 * 1000;
+
+    if (diff < ms48) {
+      const remaining = getTimeRemaining(lastPostedAt);
+      setPostError(
+        `You can post another idea after 48 hours.${remaining ? ` Try again in ${remaining}.` : ""}`
+      );
+    } else {
+      localStorage.removeItem(cooldownKey); // expired — clean up
+    }
+  }, []);
+
+  const isWithin48Hours = (dateStr) => {
+    if (!dateStr) return false;
+    return new Date() - new Date(dateStr) < 48 * 60 * 60 * 1000;
+  };
+
+  const getTimeRemaining = (fromDate) => {
+    if (!fromDate) return "";
+    const unlock = new Date(new Date(fromDate).getTime() + 48 * 60 * 60 * 1000);
+    const diff = unlock - new Date();
+    if (diff <= 0) return "";
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
+  };
+
+  // ✅ canPost scoped to this student's cooldown key
+  const lastPostedAt = localStorage.getItem(cooldownKey);
+  const canPost = !lastPostedAt || !isWithin48Hours(lastPostedAt);
+
+  const handlePostClick = () => {
+    if (!canPost) {
+      const remaining = getTimeRemaining(lastPostedAt);
+      setPostError(
+        `You can post another idea after 48 hours.${remaining ? ` Try again in ${remaining}.` : ""}`
+      );
+      return;
+    }
+    setPostError("");
+    setShowForm(true);
+  };
 
   const filteredIdeas = ideas
     .filter(i => activeFilter === "All" || i.category === activeFilter)
     .sort((a, b) => {
-      // ✅ Match by ID (most reliable) with name as fallback
-      const isMyA = a.createdById === student?.id || normalize(a.createdByName) === myName;
-      const isMyB = b.createdById === student?.id || normalize(b.createdByName) === myName;
-
+      const isMyA = String(a.createdById) === String(myId);
+      const isMyB = String(b.createdById) === String(myId);
       if (isMyA && !isMyB) return -1;
       if (!isMyA && isMyB) return 1;
-
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
 
@@ -45,12 +99,26 @@ export default function IdeasBoard() {
           <div>
             <h2 className="text-2xl font-bold">Ideas Board</h2>
             <p className="text-gray-400 text-sm">Share and support student initiatives</p>
+
+            {postError && (
+              <p className={`text-xs mt-1 flex items-center gap-1 ${
+                postError.startsWith("Idea posted")
+                  ? "text-[#26F2D0]"
+                  : "text-red-400"
+              }`}>
+                {postError.startsWith("Idea posted") ? "✅" : "⚠️"} {postError}
+              </p>
+            )}
           </div>
         </div>
 
         <button
-          className="bg-[#26F2D0] text-black px-5 py-2 rounded-xl font-semibold"
-          onClick={() => setShowForm(true)}
+          onClick={handlePostClick}
+          className={`px-5 py-2 rounded-xl font-semibold transition-all ${
+            canPost
+              ? "bg-[#26F2D0] text-black hover:bg-[#1fd4b8]"
+              : "bg-[#26F2D0]/30 text-gray-500 cursor-not-allowed"
+          }`}
         >
           + Post an Idea
         </button>
@@ -86,7 +154,7 @@ export default function IdeasBoard() {
 
       {showForm && (
         <IdeaForm
-          student={student}  
+          student={student}
           onClose={() => setShowForm(false)}
           onSubmit={async (newIdea) => {
             const res = await fetch("http://localhost:8081/api/ideas/create", {
@@ -106,14 +174,22 @@ export default function IdeasBoard() {
 
             const saved = await res.json();
 
-            // ✅ Prepend with student info guaranteed
+            // ✅ Save cooldown under this student's unique key
+            const postedAt = saved.createdAt || new Date().toISOString();
+            localStorage.setItem(cooldownKey, postedAt);
+
             setIdeas(prev => [{
               ...saved,
               createdByName: student?.name || saved.createdByName,
-              createdById: student?.id || saved.createdById,
+              createdById: myId || saved.createdById,
             }, ...prev]);
 
             setShowForm(false);
+
+            const remaining = getTimeRemaining(postedAt);
+            setPostError(
+              `Idea posted! You can post another after 48 hours.${remaining ? ` Next post available in ${remaining}.` : ""}`
+            );
           }}
         />
       )}
