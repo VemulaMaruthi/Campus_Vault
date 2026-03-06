@@ -10,6 +10,7 @@ import com.example.PdfBackend.model.Idea;
 import com.example.PdfBackend.model.StudentProfile;
 import com.example.PdfBackend.repository.IdeaRepository;
 import com.example.PdfBackend.repository.StudentProfileRepository;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -82,18 +83,20 @@ public class CommentService {
             throw new ForbiddenException("You have already commented on this idea");
         }
 
-        // ✅ Build from student profile
+        // ✅ Build comment with generated id and timestamp
         Comment comment = new Comment();
+        comment.setId(new ObjectId().toString());   // ✅ generate unique id
         comment.setComment(request.getComment());
         comment.setCommentedBy(student.getName());
         comment.setCommentedYear(student.getYear());
         comment.setCommentedBranch(student.getBranch());
         comment.setOwnerRoll(rollNumber);
+        comment.setCommentAt(LocalDateTime.now());  // ✅ set timestamp
 
         idea.getComments().add(comment);
         ideaRepository.save(idea);
 
-        return mapToIdeaCommentResponse(idea); // ✅ return full updated idea
+        return mapToIdeaCommentResponse(idea);
     }
 
     public IdeaCommentResponse deleteComment(String ideaId, String commentId, String rollNumber) {

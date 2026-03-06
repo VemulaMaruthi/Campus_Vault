@@ -25,8 +25,11 @@ public class IdeaService {
         this.studentProfileRepository = studentProfileRepository;
     }
 
-    public List<Idea> getAllIdea() {
-        return ideaRepository.findAll();
+    public List<IdeaResponses> getAllIdea() {
+        return ideaRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public IdeaResponses createIdea(IdeaRequest request, String rollNumber) {
@@ -46,6 +49,8 @@ public class IdeaService {
         idea.setCreatedByName(student.getName());
         idea.setCreatedByBranch(student.getBranch());
         idea.setCreatedByYear(student.getYear());
+        idea.setCreatedById(student.getRollNumber());   // ✅ add this
+        idea.setCreatedByEmail(student.getEmail());
 
         return mapToResponse(ideaRepository.save(idea));
     }
@@ -57,14 +62,18 @@ public class IdeaService {
         if (idea.getLikedBy() == null) idea.setLikedBy(new ArrayList<>());
 
         if (idea.getLikedBy().contains(rollNumber)) {
-            throw new ForbiddenException("You have already liked this idea");
+            // Already liked → UNLIKE
+            idea.getLikedBy().remove(rollNumber);
+            idea.setLikes(Math.max(0, idea.getLikes() - 1)); // prevent going below 0
+        } else {
+            // Not liked yet → LIKE
+            idea.getLikedBy().add(rollNumber);
+            idea.setLikes(idea.getLikes() + 1);
         }
-
-        idea.getLikedBy().add(rollNumber);
-        idea.setLikes(idea.getLikes() + 1);
 
         return mapToResponse(ideaRepository.save(idea));
     }
+
 
     // ✅ mapToResponse now includes comments
     public IdeaResponses mapToResponse(Idea idea) {
@@ -83,5 +92,17 @@ public class IdeaService {
                 idea.getLikedBy(),
                 idea.getComments() != null ? idea.getComments() : new ArrayList<>() // ✅
         );
+    }
+
+    public void deleteById(String ideaId, String rollNumber) {
+        Idea idea = ideaRepository.findById(ideaId)
+                .orElseThrow(() -> new NotFoundException("Idea not found: " + ideaId));
+
+        // ✅ Guard against old ideas with null createdById
+        if (idea.getCreatedById() == null || !idea.getCreatedById().equals(rollNumber)) {
+            throw new ForbiddenException("You can only delete your own idea");
+        }
+
+        ideaRepository.deleteById(ideaId);
     }
 }

@@ -29,7 +29,7 @@ public class IdeaController {
 
     // ✅ GET ALL IDEAS
     @GetMapping
-    public List<Idea> getAllIdeas() {
+    public List<IdeaResponses> getAllIdeas() {
         return ideaService.getAllIdea();
     }
 
@@ -75,4 +75,16 @@ public class IdeaController {
                 commentService.deleteComment(ideaId, commentId, userDetails.getUsername())
         );
     }
+
+    // ✅ AFTER:
+    @DeleteMapping("/{ideaId}")
+    public ResponseEntity<String> deleteById(
+            @PathVariable String ideaId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        ideaService.deleteById(ideaId, userDetails.getUsername());
+        return ResponseEntity.ok("The Idea is deleted");
+    }
+
+
+
 }

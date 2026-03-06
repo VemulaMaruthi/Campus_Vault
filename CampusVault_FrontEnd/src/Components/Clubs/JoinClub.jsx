@@ -250,7 +250,7 @@ function JoinClub() {
         <p className="text-center text-gray-500 text-sm">No clubs yet. Be the first to create one!</p>
       )}
 
-      <div className="flex flex-col gap-3 overflow-y-auto max-h-[60vh] no-scrollbar">
+      <div className="flex flex-col gap-3 overflow-y-auto max-h-[70vh] no-scrollbar">
         {clubs.map((club) => {
           const myClub = club.createdBy === rollNumber;
           const joined = club.members?.includes(rollNumber);
@@ -258,12 +258,13 @@ function JoinClub() {
           const inProgress = actionId === club.id;
 
           return (
+            //clubs
             <div
               key={club.id}
               onClick={() => { setSelectedClub(club); setMessage(""); }}
               className={`flex w-full items-center gap-4 cursor-pointer
                          bg-gradient-to-br from-[#0b0b0b] to-[#121212]
-                         border p-5 rounded-xl transition
+                         border p-5 py-6 rounded-xl transition
                          ${myClub ? "border-[#26F2D0]/50" : "border-white/10 hover:border-[#26F2D0]/40"}`}
             >
               <div className="flex-1">

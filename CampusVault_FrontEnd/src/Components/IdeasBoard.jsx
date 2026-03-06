@@ -4,10 +4,15 @@ import IdeaCard from "./IdeaCard";
 
 export default function IdeasBoard() {
   const token = localStorage.getItem("token");
-  const student = JSON.parse(localStorage.getItem("studentProfile") || "{}");
   const myId = localStorage.getItem("id");
 
-  // ✅ Key cooldown by student id so each student has their own cooldown
+  // ✅ Build student from the keys actually saved during login
+  const student = {
+    rollNumber: localStorage.getItem("rollNumber"),
+    name: localStorage.getItem("name"),
+    email: localStorage.getItem("Email"),
+  };
+
   const cooldownKey = `lastIdeaPostedAt_${myId}`;
 
   const [showForm, setShowForm] = useState(false);
@@ -42,7 +47,7 @@ export default function IdeasBoard() {
         `You can post another idea after 48 hours.${remaining ? ` Try again in ${remaining}.` : ""}`
       );
     } else {
-      localStorage.removeItem(cooldownKey); // expired — clean up
+      localStorage.removeItem(cooldownKey);
     }
   }, []);
 
@@ -61,7 +66,6 @@ export default function IdeasBoard() {
     return `${hours}h ${minutes}m`;
   };
 
-  // ✅ canPost scoped to this student's cooldown key
   const lastPostedAt = localStorage.getItem(cooldownKey);
   const canPost = !lastPostedAt || !isWithin48Hours(lastPostedAt);
 
@@ -80,8 +84,9 @@ export default function IdeasBoard() {
   const filteredIdeas = ideas
     .filter(i => activeFilter === "All" || i.category === activeFilter)
     .sort((a, b) => {
-      const isMyA = String(a.createdById) === String(myId);
-      const isMyB = String(b.createdById) === String(myId);
+      // ✅ Sort own ideas to top using rollNumber
+      const isMyA = a.createdById === student.rollNumber;
+      const isMyB = b.createdById === student.rollNumber;
       if (isMyA && !isMyB) return -1;
       if (!isMyA && isMyB) return 1;
       return new Date(b.createdAt) - new Date(a.createdAt);
@@ -174,14 +179,14 @@ export default function IdeasBoard() {
 
             const saved = await res.json();
 
-            // ✅ Save cooldown under this student's unique key
             const postedAt = saved.createdAt || new Date().toISOString();
             localStorage.setItem(cooldownKey, postedAt);
 
+            // ✅ Use rollNumber not MongoDB _id for createdById
             setIdeas(prev => [{
               ...saved,
-              createdByName: student?.name || saved.createdByName,
-              createdById: myId || saved.createdById,
+              createdByName: student.name || saved.createdByName,
+              createdById: student.rollNumber || saved.createdById,
             }, ...prev]);
 
             setShowForm(false);

@@ -146,9 +146,9 @@ function AddClub() {
                 </div>
 
                 {club.memberDetails && club.memberDetails.length > 0 ? (
-                  // ✅ max-h shows ~3 members (each ~40px + gap), scroll for rest
+                
                   <div className="flex flex-col gap-2 overflow-y-auto no-scrollbar"
-                    style={{ maxHeight: "132px" }} // 3 × 40px + 2 × 6px gap
+                    style={{ maxHeight: "140px" }} 
                   >
                     {club.memberDetails.map((member, index) => (
                       <div

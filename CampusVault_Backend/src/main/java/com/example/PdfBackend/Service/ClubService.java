@@ -79,12 +79,12 @@ public class ClubService {
             throw new ForbiddenException("You have already joined this club");
         }
         if (club.isFull()) {
-            throw new ForbiddenException("This club is full (max 6 members)");
+            throw new ForbiddenException("This club is full (max 20 members)");
         }
 
         long joinedCount = clubRepository.countByMembersContaining(rollNumber);
-        if (joinedCount >= 6) {
-            throw new ForbiddenException("You can only join up to 6 clubs");
+        if (joinedCount >= 20) {
+            throw new ForbiddenException("You can only join up to 20 clubs");
         }
 
         club.getMembers().add(rollNumber);
