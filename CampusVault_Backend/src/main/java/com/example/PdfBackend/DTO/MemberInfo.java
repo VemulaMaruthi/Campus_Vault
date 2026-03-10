@@ -11,4 +11,5 @@ public class MemberInfo {
     private String year;
     private String branch;
     private String linkedinUrl;
+    private String role;
 }

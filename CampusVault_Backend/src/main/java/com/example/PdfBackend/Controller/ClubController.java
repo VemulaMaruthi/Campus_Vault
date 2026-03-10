@@ -3,6 +3,7 @@ package com.example.PdfBackend.Controller;
 import com.example.PdfBackend.DTO.ClubRequest;
 import com.example.PdfBackend.DTO.ClubResponse;
 import com.example.PdfBackend.Service.ClubService;
+import com.example.PdfBackend.model.ClubRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -71,5 +72,16 @@ public class ClubController {
     @GetMapping("/count")
     public ResponseEntity<Long> getClubCount() {
         return ResponseEntity.ok(clubService.getClubCount());
+    }
+
+    @PutMapping("/{clubId}/members/{rollNumber}/role")
+    public ResponseEntity<ClubResponse> assignRole(
+            @PathVariable String clubId,
+            @PathVariable String rollNumber,
+            @RequestParam ClubRole role,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                clubService.assignRole(clubId, rollNumber, role, userDetails.getUsername())
+        );
     }
 }

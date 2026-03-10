@@ -2,6 +2,12 @@ import React, { useEffect, useState } from "react";
 import { MdDelete } from "react-icons/md";
 import ClubForm from "../ClubForm";
 
+const ROLE_CONFIG = {
+  PRESIDENT:      { label: "👑 President",      className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
+  VICE_PRESIDENT: { label: "⭐ Vice President", className: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
+  MEMBER:         { label: "👤 Member",          className: "bg-white/10 text-gray-400 border-white/20" },
+};
+
 function AddClub() {
   const [club, setClub] = useState(null);
   const [agree, setAgree] = useState(false);
@@ -19,13 +25,13 @@ function AddClub() {
   const fetchMyClub = async () => {
     try {
       console.log("Token:", token);
-    console.log("RollNumber in storage:", localStorage.getItem("rollNumber"));
+      console.log("RollNumber in storage:", localStorage.getItem("rollNumber"));
       const res = await fetch("http://localhost:8081/api/clubs/my", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) return;
       const data = await res.json();
-       console.log("My clubs response:", data);
+      console.log("My clubs response:", data);
       if (data.length > 0) setClub(data[0]);
     } catch (err) {
       console.error("Failed to fetch club:", err);
@@ -83,7 +89,6 @@ function AddClub() {
 
       setClub(null);
       setAgree(false);
-      // ✅ Notify JoinClub to refresh
       window.dispatchEvent(new Event("clubDeleted"));
     } catch (err) {
       console.error("Delete failed:", err);
@@ -146,48 +151,57 @@ function AddClub() {
                 </div>
 
                 {club.memberDetails && club.memberDetails.length > 0 ? (
-                
-                  <div className="flex flex-col gap-2 overflow-y-auto no-scrollbar"
-                    style={{ maxHeight: "140px" }} 
+                  <div
+                    className="flex flex-col gap-2 overflow-y-auto no-scrollbar"
+                    style={{ maxHeight: "140px" }}
                   >
-                    {club.memberDetails.map((member, index) => (
-                      <div
-                        key={member.rollNumber}
-                        className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg px-4 py-3 shrink-0"
-                      >
-                        {/* Index circle */}
-                        <div className="w-7 h-7 rounded-full bg-[#26F2D0]/20 text-[#26F2D0]
-                                        flex items-center justify-center text-xs font-bold shrink-0">
-                          {index + 1}
-                        </div>
+                    {club.memberDetails.map((member, index) => {
+                      const roleConfig = ROLE_CONFIG[member.role] || ROLE_CONFIG.MEMBER;
+                      return (
+                        <div
+                          key={member.rollNumber}
+                          className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg px-4 py-3 shrink-0"
+                        >
+                          {/* Index circle */}
+                          <div className="w-7 h-7 rounded-full bg-[#26F2D0]/20 text-[#26F2D0]
+                                          flex items-center justify-center text-xs font-bold shrink-0">
+                            {index + 1}
+                          </div>
 
-                        {/* Single line: name · rollNumber · year · branch · LinkedIn (if has club) */}
-                        <div className="flex items-center gap-2 flex-wrap min-w-0 text-xs">
-                          <span className="text-white font-medium">{member.name}</span>
-                          <span className="text-gray-600">·</span>
-                          <span className="text-gray-400">{member.rollNumber}</span>
-                          <span className="text-gray-600">·</span>
-                          <span className="text-gray-400">{member.year}</span>
-                          <span className="text-gray-600">·</span>
-                          <span className="text-gray-400">{member.branch}</span>
+                          {/* Member info */}
+                          <div className="flex items-center gap-2 flex-wrap min-w-0 text-xs">
+                            <span className="text-white font-medium">{member.name}</span>
+                            <span className="text-gray-600">·</span>
+                            <span className="text-gray-400">{member.rollNumber}</span>
+                            <span className="text-gray-600">·</span>
+                            <span className="text-gray-400">{member.year}</span>
+                            <span className="text-gray-600">·</span>
+                            <span className="text-gray-400">{member.branch}</span>
 
-                          {/* Show LinkedIn only if member created their own club */}
-                          {member.linkedinUrl && (
-                            <>
-                              <span className="text-gray-600">·</span>
-                              <a
-                                href={member.linkedinUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-400 hover:underline shrink-0"
-                              >
-                                LinkedIn →
-                              </a>
-                            </>
-                          )}
+                            {/* LinkedIn */}
+                            {member.linkedinUrl && (
+                              <>
+                                <span className="text-gray-600">·</span>
+                                <a
+                                  href={member.linkedinUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-400 hover:underline shrink-0"
+                                >
+                                  LinkedIn →
+                                </a>
+                              </>
+                            )}
+
+                            {/* ✅ Role badge */}
+                            <span className="text-gray-600">·</span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${roleConfig.className}`}>
+                              {roleConfig.label}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-xs text-gray-500 text-center py-3">
@@ -208,7 +222,7 @@ function AddClub() {
               </p>
               <p className="text-red-400">
                 Note : Once you create a club title and description, they cannot
-                 be edited or updated, so please fill them out carefully
+                be edited or updated, so please fill them out carefully
               </p>
             </div>
           )}

@@ -32,6 +32,8 @@ public class SecurityConfig {
                         // ✅ Auth — public
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        .requestMatchers("/api/files/**").permitAll()
+                                .requestMatchers("/api/notes/**").permitAll()
                         // ✅ Student registration — public
                         .requestMatchers("/student-profile").permitAll()
 
@@ -47,6 +49,8 @@ public class SecurityConfig {
                         // ✅ Clubs — view all & count public
                         .requestMatchers(HttpMethod.GET, "/api/clubs/all").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/clubs/count").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/clubs/my").permitAll()
+                                .requestMatchers(HttpMethod.PUT, "/api/clubs/*/members/*/role").hasAnyRole("STUDENT", "ADMIN")
 
                         // ✅ Use hasAnyRole so it expects ROLE_STUDENT, ROLE_ADMIN
                         .requestMatchers("/api/clubs/**").hasAnyRole("STUDENT", "ADMIN")

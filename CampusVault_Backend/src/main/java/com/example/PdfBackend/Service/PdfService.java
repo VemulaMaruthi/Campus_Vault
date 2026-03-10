@@ -16,21 +16,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class FileService {
+public class PdfService {
 
     private final GridFsTemplate gridFsTemplate;
     private final GridFsOperations gridFsOperations;
 
-    public FileService(GridFsTemplate gridFsTemplate, GridFsOperations gridFsOperations) {
+    public PdfService(GridFsTemplate gridFsTemplate, GridFsOperations gridFsOperations) {
         this.gridFsTemplate = gridFsTemplate;
         this.gridFsOperations = gridFsOperations;
     }
 
-    // ✅ Upload — tag as type=papers
+    // ✅ Upload — tag as type=notes
     public String uploadFile(MultipartFile file, String domain) throws IOException {
         Document metaData = new Document();
         metaData.put("domain", domain);
-        metaData.put("type", "papers"); // ✅ tag so it's separate from notes
+        metaData.put("type", "notes"); // ✅ tag so it's separate from papers
 
         ObjectId id = gridFsTemplate.store(
                 file.getInputStream(),
@@ -41,9 +41,9 @@ public class FileService {
         return id.toString();
     }
 
-    // ✅ List only papers (type=papers)
+    // ✅ List only notes (type=notes)
     public List<GridFSFile> listFiles() {
-        Query query = new Query(Criteria.where("metadata.type").is("papers"));
+        Query query = new Query(Criteria.where("metadata.type").is("notes"));
         return gridFsTemplate.find(query).into(new ArrayList<>());
     }
 
